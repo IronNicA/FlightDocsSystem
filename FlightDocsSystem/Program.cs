@@ -1,4 +1,8 @@
 using FlightDocsSystem.Data;
+using FlightDocsSystem.Service.ImplementClass;
+using FlightDocsSystem.Service.InterfaceClass;
+using FlightDocsSystem.Service.ServiceClass;
+using FlightDocsSystem.Services.ServiceClass;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +35,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IUserService,UserService>();
+builder.Services.AddScoped<IRoleService,RoleService>();
 
 
 // Add logging

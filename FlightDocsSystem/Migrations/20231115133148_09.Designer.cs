@@ -4,6 +4,7 @@ using FlightDocsSystem.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FlightDocsSystem.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231115133148_09")]
+    partial class _09
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -116,10 +119,6 @@ namespace FlightDocsSystem.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("role_normalized_name");
 
-                    b.Property<int?>("Permission")
-                        .HasColumnType("int")
-                        .HasColumnName("permission_level");
-
                     b.HasKey("Id");
 
                     b.ToTable("role");
@@ -130,24 +129,21 @@ namespace FlightDocsSystem.Migrations
                             Id = 1,
                             Creator = "System",
                             Name = "Admin",
-                            NormalizedName = "ADMIN",
-                            Permission = 2
+                            NormalizedName = "ADMIN"
                         },
                         new
                         {
                             Id = 2,
                             Creator = "System",
                             Name = "Crew",
-                            NormalizedName = "CREW",
-                            Permission = 1
+                            NormalizedName = "CREW"
                         },
                         new
                         {
                             Id = 3,
                             Creator = "System",
                             Name = "Pilot",
-                            NormalizedName = "PILOT",
-                            Permission = 2
+                            NormalizedName = "PILOT"
                         });
                 });
 

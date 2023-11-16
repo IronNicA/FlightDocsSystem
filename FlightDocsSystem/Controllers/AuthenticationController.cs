@@ -34,7 +34,7 @@ namespace FlightDocsSystem.Controllers
         }
 
         [HttpPost("Register")]
-        public async Task<ActionResult<User>> Register(UserDTO request)
+        public async Task<ActionResult<User>> Register(UserRegisterDTO request)
         {
             try
             {
@@ -50,7 +50,8 @@ namespace FlightDocsSystem.Controllers
                 {
                     UserName = request.Username,
                     PasswordHash = passwordHash,
-                    PasswordSalt = passwordSalt
+                    PasswordSalt = passwordSalt,    
+                    Role = request.Role
                 };
 
                 _context.Users.Add(newUser);
@@ -97,7 +98,8 @@ namespace FlightDocsSystem.Controllers
         {
             List<Claim> Claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, user.UserName)
+                new Claim(ClaimTypes.NameIdentifier, user.UserName),
+                new Claim(ClaimTypes.Role, user.Role)
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("AppSettings:SecretKey").Value!));

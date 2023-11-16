@@ -37,9 +37,9 @@ namespace FlightDocsSystem.Data
         {
             var roles = new[]
             {
-                new Role { Id = 1, Name = "Admin", NormalizedName = "ADMIN", Creator = "System" },
-                new Role { Id = 2, Name = "Crew", NormalizedName = "CREW", Creator = "System" },
-                new Role { Id = 3, Name = "Pilot", NormalizedName = "PILOT", Creator = "System" },
+                new Role { Id = 1, Name = "Admin", NormalizedName = "ADMIN", Creator = "System", Permission = 2},
+                new Role { Id = 2, Name = "Crew", NormalizedName = "CREW", Creator = "System" , Permission = 1},
+                new Role { Id = 3, Name = "Pilot", NormalizedName = "PILOT", Creator = "System", Permission = 2},
             };
 
             builder.Entity<Role>().HasData(roles);

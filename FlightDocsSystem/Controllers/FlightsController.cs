@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using FlightDocsSystem.Models.DataTransferObjectModels;
 using Microsoft.Extensions.Logging; 
 using FlightDocsSystem.Models;
+using FlightDocsSystem.Service.ImplementClass;
 
 namespace FlightDocsSystem.Controllers
 {
@@ -20,11 +21,13 @@ namespace FlightDocsSystem.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<FlightsController> _logger; 
+        private readonly IUserService _userService;
 
-        public FlightsController(ApplicationDbContext context, ILogger<FlightsController> logger)
+        public FlightsController(ApplicationDbContext context, ILogger<FlightsController> logger, IUserService userService)
         {
             _context = context;
             _logger = logger;
+            _userService = userService;
         }
 
         [HttpGet, Authorize]
@@ -103,7 +106,7 @@ namespace FlightDocsSystem.Controllers
                 }
 
                 flight.FlightNo = flightDTO.FlightNo;
-                flight.Creator = flightDTO.Creator;
+                flight.Creator = _userService.GetCreator();
                 flight.CreateDate = flightDTO.CreateDate;
                 flight.PoL = flightDTO.PoL;
                 flight.PoU = flightDTO.PoU;
@@ -127,7 +130,7 @@ namespace FlightDocsSystem.Controllers
                 var flight = new Flight
                 {
                     FlightNo = flightDTO.FlightNo,
-                    Creator = flightDTO.Creator,
+                    Creator = _userService.GetCreator(),
                     CreateDate = flightDTO.CreateDate,
                     PoL = flightDTO.PoL,
                     PoU = flightDTO.PoU

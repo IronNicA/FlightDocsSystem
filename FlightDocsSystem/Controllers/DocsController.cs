@@ -11,6 +11,9 @@ using FlightDocsSystem.Data;
 using FlightDocsSystem.Models.ManagementModels;
 using FlightDocsSystem.Models.DataTransferObjectModels;
 using FlightDocsSystem.Models;
+using FlightDocsSystem.Service.ImplementClass;
+using Microsoft.AspNetCore.Authorization;
+using FlightDocsSystem.Service.InterfaceClass;
 
 namespace FlightDocsSystem.Controllers
 {
@@ -20,16 +23,25 @@ namespace FlightDocsSystem.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<DocsController> _logger; 
+        private readonly IUserService _userService;
+        private readonly IRoleService _roleService;
 
-        public DocsController(ApplicationDbContext context, ILogger<DocsController> logger)
+        public DocsController(ApplicationDbContext context, ILogger<DocsController> logger, IUserService userService, IRoleService roleService)
         {
             _context = context;
             _logger = logger;
+            _userService = userService;
+            _roleService = roleService;
         }
 
-        [HttpGet]
+
+        [HttpGet, Authorize]
         public async Task<ActionResult<IEnumerable<DocDTO>>> GetDocs()
         {
+            if (!_roleService.CanUserUseMethod(HttpContext.Request.Method))
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, "Access Denied");
+            }
             try
             {
                 var docs = await _context.Docs.ToListAsync();
@@ -41,7 +53,8 @@ namespace FlightDocsSystem.Controllers
                     DocumentVer = d.DocumentVer,
                     Creator = d.Creator,
                     CreateDate = d.CreateDate,
-                    Note = d.Note
+                    Note = d.Note,
+                    FileName = d.FileName,
                 });
 
                 return Ok(docDTOs);
@@ -53,7 +66,7 @@ namespace FlightDocsSystem.Controllers
             }
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id}"), Authorize]
         public async Task<ActionResult<DocDTO>> GetDoc(int id)
         {
             try
@@ -85,7 +98,7 @@ namespace FlightDocsSystem.Controllers
             }
         }
 
-        [HttpGet("Download/{id}")]
+        [HttpGet("Download/{id}"), Authorize]
         public async Task<ActionResult<DocDTO>> DownloadDoc(int id)
         {
             try
@@ -119,7 +132,7 @@ namespace FlightDocsSystem.Controllers
             }
         }
 
-        [HttpPut("Update/{id}")]
+        [HttpPut("Update/{id}"), Authorize]
         public async Task<IActionResult> PutDoc(int id, [FromForm] DocDTO docDTO, IFormFile? file)
         {
             try
@@ -170,9 +183,13 @@ namespace FlightDocsSystem.Controllers
             }
         }
 
-        [HttpPost("Upload_Document")]
+        [HttpPost("Upload_Document"), Authorize]
         public async Task<ActionResult<DocDTO>> PostDoc([FromForm] DocDTO docDTO, IFormFile file)
         {
+            if (!_roleService.CanUserUseMethod(HttpContext.Request.Method))
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, "Access Denied");
+            }
             try
             {
                 var doc = new Doc();
@@ -181,6 +198,7 @@ namespace FlightDocsSystem.Controllers
                 doc.Creator = docDTO.Creator;
                 doc.CreateDate = docDTO.CreateDate;
                 doc.Note = docDTO.Note;
+                doc.FileName = docDTO.FileName;
 
                 if (file != null)
                 {
@@ -194,7 +212,7 @@ namespace FlightDocsSystem.Controllers
                 {
                     DocTitle = doc.DocTitle,
                     DocumentVer = doc.DocumentVer,
-                    Creator = doc.Creator,
+                    Creator = _userService.GetCreator(),
                     CreateDate = doc.CreateDate,
                     Note = doc.Note,
                     FileName = doc.FileName
@@ -209,7 +227,7 @@ namespace FlightDocsSystem.Controllers
             }
         }
 
-        [HttpDelete("Delete/{id}")]
+        [HttpDelete("Delete/{id}"), Authorize]
         public async Task<IActionResult> DeleteDoc(int id)
         {
             try

@@ -30,6 +30,6 @@ namespace FlightDocsSystem.Models.ManagementModels
         public string? Phone { get; set; }
 
         [Column("role")]
-        public IdentityRole? Role { get; set; }
+        public string? Role { get; set; }
     }
 }
