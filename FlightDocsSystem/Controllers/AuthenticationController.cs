@@ -7,14 +7,14 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using FlightDocsSystem.Data;
-using FlightDocsSystem.Models.DataTransferObjectModels;
 using FlightDocsSystem.Models.ManagementModels;
-using FlightDocsSystem.Models; 
+using FlightDocsSystem.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using FlightDocsSystem.Models.DataTransferObjectModels.User;
 
 namespace FlightDocsSystem.Controllers
 {
@@ -38,7 +38,6 @@ namespace FlightDocsSystem.Controllers
         {
             try
             {
-                // Check if the username already exists in the database
                 if (_context.Users.Any(u => u.UserName == request.Username))
                 {
                     return BadRequest(new Emessage { StatusCode = StatusCodes.Status400BadRequest, Message = "Username already exists." });
@@ -49,25 +48,26 @@ namespace FlightDocsSystem.Controllers
                 var newUser = new User
                 {
                     UserName = request.Username,
+                    Email = request.Email,
                     PasswordHash = passwordHash,
                     PasswordSalt = passwordSalt,    
-                    Role = request.Role
+                    Role = "UnAssigned"
                 };
 
                 _context.Users.Add(newUser);
                 await _context.SaveChangesAsync();
 
-                return Ok(newUser);
+                return Ok();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred during user registration");
-                return StatusCode(StatusCodes.Status500InternalServerError, new Emessage { StatusCode = StatusCodes.Status500InternalServerError, Message = "Internal Server Error" });
+                return StatusCode(StatusCodes.Status500InternalServerError, new Emessage { StatusCode = StatusCodes.Status500InternalServerError, Message = ex.Message });
             }
         }
 
         [HttpPost("Login")]
-        public async Task<ActionResult<string>> Login(UserDTO request)
+        public async Task<ActionResult<string>> Login(UserLoginGTO request)
         {
             try
             {
@@ -90,7 +90,7 @@ namespace FlightDocsSystem.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred during user login");
-                return StatusCode(StatusCodes.Status500InternalServerError, new Emessage { StatusCode = StatusCodes.Status500InternalServerError, Message = "Internal Server Error" });
+                return StatusCode(StatusCodes.Status500InternalServerError, new Emessage { StatusCode = StatusCodes.Status500InternalServerError, Message = ex.Message });
             }
         }
 
@@ -101,6 +101,7 @@ namespace FlightDocsSystem.Controllers
                 new Claim(ClaimTypes.NameIdentifier, user.UserName),
                 new Claim(ClaimTypes.Role, user.Role)
             };
+
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("AppSettings:SecretKey").Value!));
 
