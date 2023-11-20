@@ -15,10 +15,9 @@ namespace FlightDocsSystem.Service.ServiceClass
             var creator = string.Empty;
             if (_httpContextAccessor.HttpContext != null) 
             {
-                creator = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Name);
+                creator = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             }
             return creator;
         }
-
     }
 }

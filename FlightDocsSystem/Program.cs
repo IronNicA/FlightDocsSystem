@@ -38,6 +38,7 @@ builder.Logging.AddConsole();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserService,UserService>();
 builder.Services.AddScoped<IRoleService,RoleService>();
+builder.Services.AddScoped<IFlightService, FlightService>();
 
 
 // Add logging

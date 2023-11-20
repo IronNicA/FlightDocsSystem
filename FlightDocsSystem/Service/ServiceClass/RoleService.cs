@@ -55,7 +55,6 @@ namespace FlightDocsSystem.Services.ServiceClass
                 }
             }
 
-            // If permission is not defined or there is any issue, deny access
             return false;
         }
 

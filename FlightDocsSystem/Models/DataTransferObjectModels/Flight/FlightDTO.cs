@@ -1,5 +1,4 @@
-﻿
-namespace FlightDocsSystem.Models.DataTransferObjectModels
+﻿namespace FlightDocsSystem.Models.DataTransferObjectModels.Flight
 {
     public class FlightDTO
     {

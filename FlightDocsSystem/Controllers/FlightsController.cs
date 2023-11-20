@@ -1,17 +1,16 @@
-﻿using System;
+﻿// FlightsController.cs
+
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
+using FlightDocsSystem.Models;
+using FlightDocsSystem.Models.DataTransferObjectModels.Flight;
+using FlightDocsSystem.Service;
+using FlightDocsSystem.Service.InterfaceClass;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using FlightDocsSystem.Data;
-using FlightDocsSystem.Models.ManagementModels;
-using Microsoft.AspNetCore.Authorization;
-using FlightDocsSystem.Models.DataTransferObjectModels;
-using Microsoft.Extensions.Logging; 
-using FlightDocsSystem.Models;
-using FlightDocsSystem.Service.ImplementClass;
+using Microsoft.Extensions.Logging;
 
 namespace FlightDocsSystem.Controllers
 {
@@ -19,15 +18,11 @@ namespace FlightDocsSystem.Controllers
     [ApiController]
     public class FlightsController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
-        private readonly ILogger<FlightsController> _logger; 
-        private readonly IUserService _userService;
+        private readonly IFlightService _flightService;
 
-        public FlightsController(ApplicationDbContext context, ILogger<FlightsController> logger, IUserService userService)
+        public FlightsController(IFlightService flightManageService)
         {
-            _context = context;
-            _logger = logger;
-            _userService = userService;
+            _flightService = flightManageService;
         }
 
         [HttpGet, Authorize]
@@ -35,24 +30,12 @@ namespace FlightDocsSystem.Controllers
         {
             try
             {
-                var flights = await _context.Flights
-                    .Select(f => new FlightDTO
-                    {
-                        Id = f.Id,
-                        FlightNo = f.FlightNo,
-                        Creator = f.Creator,
-                        CreateDate = f.CreateDate,
-                        PoL = f.PoL,
-                        PoU = f.PoU
-                    })
-                    .ToListAsync();
-
-                return flights;
+                var flights = await _flightService.GetFlights();
+                return Ok(flights);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while retrieving flights");
-                return StatusCode(StatusCodes.Status500InternalServerError, new Emessage { StatusCode = StatusCodes.Status500InternalServerError, Message = "Internal Server Error" });
+                return StatusCode(StatusCodes.Status500InternalServerError, new Emessage { StatusCode = StatusCodes.Status500InternalServerError, Message = ex.Message });
             }
         }
 
@@ -61,30 +44,18 @@ namespace FlightDocsSystem.Controllers
         {
             try
             {
-                var flight = await _context.Flights
-                    .Where(f => f.Id == id)
-                    .Select(f => new FlightDTO
-                    {
-                        Id = f.Id,
-                        FlightNo = f.FlightNo,
-                        Creator = f.Creator,
-                        CreateDate = f.CreateDate,
-                        PoL = f.PoL,
-                        PoU = f.PoU
-                    })
-                    .FirstOrDefaultAsync();
+                var flight = await _flightService.GetFlight(id);
 
                 if (flight == null)
                 {
                     return NotFound();
                 }
 
-                return flight;
+                return Ok(flight);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while retrieving a flight");
-                return StatusCode(StatusCodes.Status500InternalServerError, new Emessage { StatusCode = StatusCodes.Status500InternalServerError, Message = "Internal Server Error" });
+                return StatusCode(StatusCodes.Status500InternalServerError, new Emessage { StatusCode = StatusCodes.Status500InternalServerError, Message = ex.Message });
             }
         }
 
@@ -93,58 +64,26 @@ namespace FlightDocsSystem.Controllers
         {
             try
             {
-                if (id != flightDTO.Id)
-                {
-                    return BadRequest();
-                }
-
-                var flight = await _context.Flights.FindAsync(id);
-
-                if (flight == null)
-                {
-                    return NotFound();
-                }
-
-                flight.FlightNo = flightDTO.FlightNo;
-                flight.Creator = _userService.GetCreator();
-                flight.CreateDate = flightDTO.CreateDate;
-                flight.PoL = flightDTO.PoL;
-                flight.PoU = flightDTO.PoU;
-
-                await _context.SaveChangesAsync();
-
-                return NoContent();
+                var result = await _flightService.PutFlight(id, flightDTO);
+                return result;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while updating a flight");
-                return StatusCode(StatusCodes.Status500InternalServerError, new Emessage { StatusCode = StatusCodes.Status500InternalServerError, Message = "Internal Server Error" });
+                return StatusCode(StatusCodes.Status500InternalServerError, new Emessage { StatusCode = StatusCodes.Status500InternalServerError, Message = ex.Message });
             }
         }
 
         [HttpPost("AddFlight"), Authorize]
-        public async Task<ActionResult<FlightDTO>> PostFlight(FlightDTO flightDTO)
+        public async Task<ActionResult<PostFlightDTO>> PostFlight(PostFlightDTO flightDTO)
         {
             try
             {
-                var flight = new Flight
-                {
-                    FlightNo = flightDTO.FlightNo,
-                    Creator = _userService.GetCreator(),
-                    CreateDate = flightDTO.CreateDate,
-                    PoL = flightDTO.PoL,
-                    PoU = flightDTO.PoU
-                };
-
-                _context.Flights.Add(flight);
-                await _context.SaveChangesAsync();
-
-                return CreatedAtAction("GetFlight", new { id = flight.Id }, flightDTO);
+                var result = await _flightService.PostFlight(flightDTO);
+                return result;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while creating a new flight");
-                return StatusCode(StatusCodes.Status500InternalServerError, new Emessage { StatusCode = StatusCodes.Status500InternalServerError, Message = "Internal Server Error" });
+                return StatusCode(StatusCodes.Status500InternalServerError, new Emessage { StatusCode = StatusCodes.Status500InternalServerError, Message = ex.Message });
             }
         }
 
@@ -153,22 +92,12 @@ namespace FlightDocsSystem.Controllers
         {
             try
             {
-                var flight = await _context.Flights.FindAsync(id);
-
-                if (flight == null)
-                {
-                    return NotFound();
-                }
-
-                _context.Flights.Remove(flight);
-                await _context.SaveChangesAsync();
-
-                return NoContent();
+                var result = await _flightService.DeleteFlight(id);
+                return result;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while deleting a flight");
-                return StatusCode(StatusCodes.Status500InternalServerError, new Emessage { StatusCode = StatusCodes.Status500InternalServerError, Message = "Internal Server Error" });
+                return StatusCode(StatusCodes.Status500InternalServerError, new Emessage { StatusCode = StatusCodes.Status500InternalServerError, Message = ex.Message });
             }
         }
     }

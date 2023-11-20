@@ -1,6 +1,6 @@
 ﻿using FlightDocsSystem.Data;
 using FlightDocsSystem.Models;
-using FlightDocsSystem.Models.DataTransferObjectModels.GroupRole;
+using FlightDocsSystem.Models.DataTransferObjectModels;
 using FlightDocsSystem.Models.ManagementModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -29,7 +29,6 @@ namespace FlightDocsSystem.Controllers
             try
             {
                 var distinctRoles = _context.Roles.Select(r => r.Name).Distinct().ToList();
-
                 var roleInfoList = new List<RoleInfoDTO>();
 
                 foreach (var roleName in distinctRoles)
