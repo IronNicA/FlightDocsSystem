@@ -15,8 +15,6 @@ namespace FlightDocsSystem.Models.ManagementModels
         [Column("role_normalized_name")]
         public string? NormalizedName { get; set; }
         [Column("role_creator")]
-        public string? Creator {  get; set; }
-        [Column("permission_level")]
-        public int? Permission { get; internal set; }
+        public string? Creator { get; set; }
     }
 }

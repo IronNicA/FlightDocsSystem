@@ -1,7 +1,7 @@
 ﻿using FlightDocsSystem.Data;
 using FlightDocsSystem.Models.DataTransferObjectModels.Flight;
 using FlightDocsSystem.Models.ManagementModels;
-using FlightDocsSystem.Service.ImplementClass;
+using FlightDocsSystem.Service.InterfaceClass;
 using FlightDocsSystem.Service.InterfaceClass;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

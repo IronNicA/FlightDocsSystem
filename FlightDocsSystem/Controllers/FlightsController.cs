@@ -1,11 +1,9 @@
-﻿// FlightsController.cs
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using FlightDocsSystem.AuthorizationAttribute;
 using FlightDocsSystem.Models;
 using FlightDocsSystem.Models.DataTransferObjectModels.Flight;
-using FlightDocsSystem.Service;
 using FlightDocsSystem.Service.InterfaceClass;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -15,7 +13,9 @@ using Microsoft.Extensions.Logging;
 namespace FlightDocsSystem.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize]
     [ApiController]
+    [JwtAuthorization]
     public class FlightsController : ControllerBase
     {
         private readonly IFlightService _flightService;

@@ -31,10 +31,6 @@ namespace FlightDocsSystem.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("datetime")
-                        .HasColumnName("create_date");
-
                     b.Property<string>("Creator")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("create_by");
@@ -44,21 +40,55 @@ namespace FlightDocsSystem.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("doc_title");
 
-                    b.Property<string>("DocumentVer")
+                    b.Property<string>("DocType")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
+                        .HasColumnName("doc_type");
+
+                    b.Property<float?>("DocumentVer")
+                        .HasColumnType("real")
                         .HasColumnName("doc_type_id");
 
                     b.Property<string>("FileName")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("file_name");
 
-                    b.Property<string>("Note")
+                    b.Property<string>("FlightNo")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
-                        .HasColumnName("note");
+                        .HasColumnName("flight");
+
+                    b.Property<DateTime>("UpdateDate")
+                        .HasColumnType("datetime")
+                        .HasColumnName("update_date");
 
                     b.HasKey("Id");
 
-                    b.ToTable("doc");
+                    b.ToTable("document");
+                });
+
+            modelBuilder.Entity("FlightDocsSystem.Models.ManagementModels.DocType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("Id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Creator")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("create_by");
+
+                    b.Property<string>("DocTypeName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("doc_type_name");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("doc_type");
                 });
 
             modelBuilder.Entity("FlightDocsSystem.Models.ManagementModels.Flight", b =>
@@ -116,10 +146,6 @@ namespace FlightDocsSystem.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("role_normalized_name");
 
-                    b.Property<int?>("Permission")
-                        .HasColumnType("int")
-                        .HasColumnName("permission_level");
-
                     b.HasKey("Id");
 
                     b.ToTable("role");
@@ -130,25 +156,56 @@ namespace FlightDocsSystem.Migrations
                             Id = 1,
                             Creator = "System",
                             Name = "Admin",
-                            NormalizedName = "ADMIN",
-                            Permission = 2
+                            NormalizedName = "ADMIN"
                         },
                         new
                         {
                             Id = 2,
                             Creator = "System",
                             Name = "Crew",
-                            NormalizedName = "CREW",
-                            Permission = 1
+                            NormalizedName = "CREW"
                         },
                         new
                         {
                             Id = 3,
                             Creator = "System",
                             Name = "Pilot",
-                            NormalizedName = "PILOT",
-                            Permission = 2
+                            NormalizedName = "PILOT"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Creator = "System",
+                            Name = "Employee",
+                            NormalizedName = "EMPLOYEE"
                         });
+                });
+
+            modelBuilder.Entity("FlightDocsSystem.Models.ManagementModels.RolePermission", b =>
+                {
+                    b.Property<int?>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("Id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int?>("Id"));
+
+                    b.Property<int>("DocTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Permission")
+                        .HasColumnType("int")
+                        .HasColumnName("permission");
+
+                    b.Property<string>("Role")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("role");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocTypeId");
+
+                    b.ToTable("role_permission");
                 });
 
             modelBuilder.Entity("FlightDocsSystem.Models.ManagementModels.User", b =>
@@ -200,6 +257,32 @@ namespace FlightDocsSystem.Migrations
                             Role = "Admin",
                             UserName = "admin"
                         });
+                });
+
+            modelBuilder.Entity("FlightDocsSystem.Models.SessionInfo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("Id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("LastAccessTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("last_access_time");
+
+                    b.Property<string>("Token")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("token");
+
+                    b.Property<string>("UserName")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("user");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Sessions");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -400,6 +483,17 @@ namespace FlightDocsSystem.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("FlightDocsSystem.Models.ManagementModels.RolePermission", b =>
+                {
+                    b.HasOne("FlightDocsSystem.Models.ManagementModels.DocType", "DocType")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("DocTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DocType");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -449,6 +543,11 @@ namespace FlightDocsSystem.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("FlightDocsSystem.Models.ManagementModels.DocType", b =>
+                {
+                    b.Navigation("RolePermissions");
                 });
 #pragma warning restore 612, 618
         }

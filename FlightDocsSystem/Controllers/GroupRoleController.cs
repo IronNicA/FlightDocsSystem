@@ -1,26 +1,95 @@
-﻿using FlightDocsSystem.Data;
+﻿using FlightDocsSystem.AuthorizationAttribute;
 using FlightDocsSystem.Models;
 using FlightDocsSystem.Models.DataTransferObjectModels;
-using FlightDocsSystem.Models.ManagementModels;
+using FlightDocsSystem.Models.DataTransferObjectModels.GroupRole;
+using FlightDocsSystem.Service.InterfaceClass;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using System;
+using System.Threading.Tasks;
 
 namespace FlightDocsSystem.Controllers
 {
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [ApiController]
-    public class GroupRoleController : ControllerBase
-    {
-        private readonly ApplicationDbContext _context;
-        private readonly ILogger<DocsController> _logger;
+    [JwtAuthorization]
 
-        public GroupRoleController(ApplicationDbContext context, ILogger<DocsController> logger)
+    public class GroupRoleApiController : ControllerBase
+    {
+        private readonly IGroupRoleManageService _groupRoleManageService;
+
+        public GroupRoleApiController(IGroupRoleManageService groupRoleManageService)
         {
-            _context = context;
-            _logger = logger;
+            _groupRoleManageService = groupRoleManageService;
+        }
+
+        [HttpGet("GetAllDocTypes")]
+        public async Task<IActionResult> GetAllDocTypes()
+        {
+            try
+            {
+                var result = await _groupRoleManageService.GetAllDocTypes();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new Emessage { StatusCode = 500, Message = ex.Message });
+            }
+        }
+
+
+        [HttpGet("doctypes/{id}")]
+        public async Task<IActionResult> GetDocType(int id)
+        {
+            try
+            {
+                return await _groupRoleManageService.GetDocType(id);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new Emessage { StatusCode = 500, Message = ex.Message });
+            }
+        }
+
+        [HttpGet("doctypes/{docTypeId}/rolepermissions")]
+        public async Task<IActionResult> GetRolePermissionsByDocType(int docTypeId)
+        {
+            try
+            {
+                return await _groupRoleManageService.GetRolePermissionsByDocType(docTypeId);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new Emessage { StatusCode = 500, Message = ex.Message });
+            }
+        }
+
+        [HttpPost("doctype")]
+        public async Task<IActionResult> CreateDocType([FromBody] CreateDocTypeDTO createDocTypeDTO)
+        {
+            try
+            {
+                return await _groupRoleManageService.CreateDocType(createDocTypeDTO);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new Emessage { StatusCode = 500, Message = ex.Message });
+            }
+        }
+
+        [HttpPut("rolepermissions/{rolePermissionId}/updatepermission")]
+        public async Task<IActionResult> UpdateRolePermissionPermission(int rolePermissionId, [FromBody] UpdatePermissionDTO updatePermissionDTO)
+        {
+            try
+            {
+                return await _groupRoleManageService.UpdateRolePermissionPermission(rolePermissionId, updatePermissionDTO);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new Emessage { StatusCode = 500, Message = ex.Message });
+            }
         }
 
         [HttpGet("GetAllRolesAndCreators")]
@@ -28,86 +97,37 @@ namespace FlightDocsSystem.Controllers
         {
             try
             {
-                var distinctRoles = _context.Roles.Select(r => r.Name).Distinct().ToList();
-                var roleInfoList = new List<RoleInfoDTO>();
-
-                foreach (var roleName in distinctRoles)
-                {
-                    var role = _context.Roles.FirstOrDefault(r => r.Name == roleName);
-                    if (role != null)
-                    {
-                        var roleInfo = new RoleInfoDTO
-                        {
-                            RoleName = roleName,
-                            Creator = role.Creator
-                        };
-
-                        roleInfoList.Add(roleInfo);
-                    }
-                }
-
-                return Ok(roleInfoList);
+                return _groupRoleManageService.GetAllRolesAndCreators();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while retrieving available groups");
-                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+                return StatusCode(500, new Emessage { StatusCode = 500, Message = ex.Message });
             }
         }
-
 
         [HttpGet("GetUsersByRole/{roleName}")]
         public IActionResult GetUsersByRole(string roleName)
         {
             try
             {
-                var usersWithRole = _context.Users.Where(u => u.Role == roleName).ToList();
-                var usernames = usersWithRole.Select(u => u.UserName).ToList();
-
-                var usersByRoleDTO = new UsersByRoleDTO
-                {
-                    Usernames = usernames
-                };
-
-                return Ok(usersByRoleDTO);
+                return _groupRoleManageService.GetUsersByRole(roleName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while retrieving users by role");
-                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+                return StatusCode(500, new Emessage { StatusCode = 500, Message = ex.Message });
             }
         }
-
 
         [HttpGet]
         public async Task<IActionResult> GroupRoles()
         {
             try
             {
-                var roleNames = await _context.Roles.Select(r => r.Name).Distinct().ToListAsync();
-                var roleUsersDictionary = new Dictionary<string, List<string>>();
-
-                foreach (var roleName in roleNames)
-                {
-                    var usersWithRole = await _context.Users
-                        .Where(u => u.Role == roleName)
-                        .Select(u => u.UserName)
-                        .ToListAsync();
-
-                    roleUsersDictionary.Add(roleName, usersWithRole);
-                }
-
-                var groupRolesDTO = new GroupRolesDTO
-                {
-                    RoleUsers = roleUsersDictionary
-                };
-
-                return Ok(groupRolesDTO);
+                return await _groupRoleManageService.GroupRoles();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while retrieving users by role");
-                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+                return StatusCode(500, new Emessage { StatusCode = 500, Message = ex.Message });
             }
         }
 
@@ -116,22 +136,11 @@ namespace FlightDocsSystem.Controllers
         {
             try
             {
-                var unAssignedUsers = _context.Users
-                    .Where(u => u.Role == "UnAssigned")
-                    .Select(u => u.UserName)
-                    .ToList();
-
-                var unAssignedUsersDto = new UnAssignedUsersDTO
-                {
-                    UnAssignedUsernames = unAssignedUsers
-                };
-
-                return Ok(unAssignedUsersDto);
+                return _groupRoleManageService.GetUnAssignedUsers();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while retrieving users by role");
-                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+                return StatusCode(500, new Emessage { StatusCode = 500, Message = ex.Message });
             }
         }
 
@@ -140,24 +149,11 @@ namespace FlightDocsSystem.Controllers
         {
             try
             {
-                var userId = unAssignUserGroupDTO.UserId;
-                var user = await _context.Users.FindAsync(userId);
-
-                if (user == null)
-                {
-                    return NotFound($"User with ID {userId} not found.");
-                }
-
-                user.Role = "UnAssigned";
-                _context.Entry(user).State = EntityState.Modified;
-
-                await _context.SaveChangesAsync();
-                return Ok(new { Message = $"User with ID {userId} successfully unassigned." });
+                return await _groupRoleManageService.UnAssignUserGroup(unAssignUserGroupDTO);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while unassigning user from group");
-                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+                return StatusCode(500, new Emessage { StatusCode = 500, Message = ex.Message });
             }
         }
 
@@ -166,74 +162,11 @@ namespace FlightDocsSystem.Controllers
         {
             try
             {
-                var userId = assignUserRoleDTO.UserId;
-                var newRole = assignUserRoleDTO.NewRole;
-
-                if (string.IsNullOrEmpty(newRole))
-                {
-                    return BadRequest("Invalid new role.");
-                }
-
-                var user = _context.Users.Find(userId);
-
-                if (user == null)
-                {
-                    return NotFound($"User with ID {userId} not found.");
-                }
-
-                if (user.Role != "UnAssigned")
-                {
-                    return BadRequest("User must have 'UnAssigned' role to be assigned to a new group role.");
-                }
-
-                if (newRole == "Admin")
-                {
-                    return BadRequest("Assignment of 'Admin' role is not allowed.");
-                }
-
-                user.Role = newRole;
-                _context.Entry(user).State = EntityState.Modified;
-                _context.SaveChanges();
-
-                return Ok(new { Message = $"Assigned role '{newRole}' to user with ID {userId}." });
+                return _groupRoleManageService.AssignUserRole(assignUserRoleDTO);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while assigning group role");
-                return StatusCode(500, $"Internal Server Error: {ex.Message}");
-            }
-        }
-
-        [HttpPut("UpdateRolePermission/{roleName}/{newPermission}")]
-        public IActionResult UpdateRolePermission([FromBody] UpdateRolePermissionDTO updateRolePermissionDTO)
-        {
-            try
-            {
-                var roleName = updateRolePermissionDTO.RoleName;
-                var newPermission = updateRolePermissionDTO.NewPermission;
-
-                if (newPermission < 0 || newPermission > 2)
-                {
-                    return BadRequest("Invalid permission value. It should be 0, 1, or 2.");
-                }
-
-                var role = _context.Roles.SingleOrDefault(r => r.Name == roleName);
-
-                if (role == null)
-                {
-                    return NotFound($"Role with name {roleName} not found.");
-                }
-
-                role.Permission = newPermission;
-                _context.Entry(role).State = EntityState.Modified;
-                _context.SaveChanges();
-
-                return Ok(new { Message = $"Updated permission to {newPermission} for role {roleName}." });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while updating role permission");
-                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+                return StatusCode(500, new Emessage { StatusCode = 500, Message = ex.Message });
             }
         }
     }

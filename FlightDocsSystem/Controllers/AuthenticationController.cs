@@ -1,138 +1,91 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
-using FlightDocsSystem.Data;
-using FlightDocsSystem.Models.ManagementModels;
 using FlightDocsSystem.Models;
+using FlightDocsSystem.Models.DataTransferObjectModels.User;
+using FlightDocsSystem.Models.ManagementModels;
+using FlightDocsSystem.Service.InterfaceClass;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
-using FlightDocsSystem.Models.DataTransferObjectModels.User;
 
-namespace FlightDocsSystem.Controllers
+[Route("api/[controller]")]
+[ApiController]
+public class AuthenticationController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class AuthenticationController : ControllerBase
+    private readonly IAuthenticationService _authenticationService;
+    private readonly ILogger<AuthenticationController> _logger;
+    private readonly IUserService _userService;
+
+    public AuthenticationController(IAuthenticationService authenticationService, ILogger<AuthenticationController> logger, IUserService userService)
     {
-        private readonly IConfiguration _configuration;
-        private readonly ApplicationDbContext _context;
-        private readonly ILogger<AuthenticationController> _logger;
+        _authenticationService = authenticationService;
+        _logger = logger;
+        _userService = userService;
+    }
 
-        public AuthenticationController(IConfiguration configuration, ApplicationDbContext context, ILogger<AuthenticationController> logger)
+    [HttpPost("Register")]
+    public async Task<ActionResult<User>> Register(UserRegisterDTO request)
+    {
+        try
         {
-            _configuration = configuration;
-            _context = context;
-            _logger = logger;
+            var newUser = await _authenticationService.Register(request);
+
+            if (newUser == null)
+            {
+                return BadRequest(new Emessage { StatusCode = StatusCodes.Status400BadRequest, Message = "Username already exists." });
+            }
+
+            return Ok(newUser);
         }
-
-        [HttpPost("Register")]
-        public async Task<ActionResult<User>> Register(UserRegisterDTO request)
+        catch (Exception ex)
         {
-            try
-            {
-                if (_context.Users.Any(u => u.UserName == request.Username))
-                {
-                    return BadRequest(new Emessage { StatusCode = StatusCodes.Status400BadRequest, Message = "Username already exists." });
-                }
-
-                CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
-
-                var newUser = new User
-                {
-                    UserName = request.Username,
-                    Email = request.Email,
-                    PasswordHash = passwordHash,
-                    PasswordSalt = passwordSalt,    
-                    Role = "UnAssigned"
-                };
-
-                _context.Users.Add(newUser);
-                await _context.SaveChangesAsync();
-
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred during user registration");
-                return StatusCode(StatusCodes.Status500InternalServerError, new Emessage { StatusCode = StatusCodes.Status500InternalServerError, Message = ex.Message });
-            }
+            _logger.LogError(ex, "Error occurred during user registration");
+            return StatusCode(StatusCodes.Status500InternalServerError, new Emessage { StatusCode = StatusCodes.Status500InternalServerError, Message = ex.Message });
         }
+    }
 
-        [HttpPost("Login")]
-        public async Task<ActionResult<string>> Login(UserLoginGTO request)
+    [HttpPost("Login")]
+    public async Task<ActionResult<string>> Login(UserLoginGTO request)
+    {
+        try
         {
-            try
+            var token = await _authenticationService.Login(request);
+
+            if (token == null)
             {
-                var user = _context.Users.SingleOrDefault(u => u.UserName == request.Username);
-
-                if (user == null)
-                {
-                    return BadRequest(new Emessage { StatusCode = StatusCodes.Status400BadRequest, Message = "User not found!" });
-                }
-
-                if (!VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
-                {
-                    return BadRequest(new Emessage { StatusCode = StatusCodes.Status400BadRequest, Message = "Wrong password!" });
-                }
-
-                string token = CreateToken(user);
-
-                return Ok(token);
+                return BadRequest(new Emessage { StatusCode = StatusCodes.Status400BadRequest, Message = "Invalid login credentials." });
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred during user login");
-                return StatusCode(StatusCodes.Status500InternalServerError, new Emessage { StatusCode = StatusCodes.Status500InternalServerError, Message = ex.Message });
-            }
+
+            return Ok(token);
         }
-
-        private string CreateToken(User user)
+        catch (Exception ex)
         {
-            List<Claim> Claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.UserName),
-                new Claim(ClaimTypes.Role, user.Role)
-            };
-
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("AppSettings:SecretKey").Value!));
-
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
-
-            var token = new JwtSecurityToken(
-                claims: Claims,
-                expires: DateTime.Now.AddMinutes(30),
-                signingCredentials: credentials);
-
-            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
-
-            return jwt;
+            _logger.LogError(ex, "Error occurred during user login");
+            return StatusCode(StatusCodes.Status500InternalServerError, new Emessage { StatusCode = StatusCodes.Status500InternalServerError, Message = ex.Message });
         }
+    }
 
-        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+    [HttpPost("Logout"), Authorize]
+    public async Task<ActionResult> Logout()
+    {
+        try
         {
-            using (var hmac = new HMACSHA512())
+            var userName = _userService.GetCreator();
+
+            if (string.IsNullOrEmpty(userName))
             {
-                passwordSalt = hmac.Key;
-                passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
+                return BadRequest(new Emessage { StatusCode = StatusCodes.Status400BadRequest, Message = "User not authenticated!" });
             }
+
+            await _authenticationService.Logout(userName);
+
+            return Ok("Logout successful");
         }
-
-        private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
+        catch (Exception ex)
         {
-            using (var hmac = new HMACSHA512(passwordSalt))
-            {
-                var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return computedHash.SequenceEqual(passwordHash);
-            }
+            _logger.LogError(ex, "Error occurred during user logout");
+            return StatusCode(StatusCodes.Status500InternalServerError, new Emessage { StatusCode = StatusCodes.Status500InternalServerError, Message = ex.Message });
         }
     }
 }

@@ -1,8 +1,10 @@
-﻿using FlightDocsSystem.Models.ManagementModels;
+﻿using FlightDocsSystem.Models;
+using FlightDocsSystem.Models.ManagementModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using System.Reflection.Emit;
 
 namespace FlightDocsSystem.Data
 {
@@ -16,18 +18,26 @@ namespace FlightDocsSystem.Data
         public DbSet<Flight> Flights { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
+        public DbSet<DocType> DocTypes { get; set; }
+        public DbSet<RolePermission> RolePermissions { get; set; }
+        public DbSet<SessionInfo> Sessions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
             builder.Entity<Doc>()
-                .Property(d => d.CreateDate)
+                .Property(d => d.UpdateDate)
                 .HasColumnType("datetime");
 
             builder.Entity<Flight>()
                 .Property(f => f.CreateDate)
                 .HasColumnType("datetime");
+
+            builder.Entity<DocType>()
+               .HasMany(dt => dt.RolePermissions)
+               .WithOne(rp => rp.DocType)
+               .HasForeignKey(rp => rp.DocTypeId);
 
             SeedRolesAndAdminUser(builder);
         }
@@ -36,9 +46,10 @@ namespace FlightDocsSystem.Data
         {
             var roles = new[]
             {
-            new Role { Id = 1, Name = "Admin", NormalizedName = "ADMIN", Creator = "System", Permission = 2},
-            new Role { Id = 2, Name = "Crew", NormalizedName = "CREW", Creator = "System" , Permission = 1},
-            new Role { Id = 3, Name = "Pilot", NormalizedName = "PILOT", Creator = "System", Permission = 2},
+            new Role { Id = 1, Name = "Admin", NormalizedName = "ADMIN", Creator = "System"},
+            new Role { Id = 2, Name = "Crew", NormalizedName = "CREW", Creator = "System"},
+            new Role { Id = 3, Name = "Pilot", NormalizedName = "PILOT", Creator = "System"},
+            new Role { Id = 4, Name = "Employee", NormalizedName = "EMPLOYEE", Creator = "System"},
         };
 
             builder.Entity<Role>().HasData(roles);

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Data;
 
 namespace FlightDocsSystem.Models.ManagementModels
 {
@@ -33,4 +33,3 @@ namespace FlightDocsSystem.Models.ManagementModels
         public string? Role { get; set; }
     }
 }
-    

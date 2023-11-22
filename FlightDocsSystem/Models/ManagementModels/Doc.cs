@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FlightDocsSystem.Models.ManagementModels
 {
-    [Table("doc")]
+    [Table("document")]
     public class Doc
     {
         [Key]
@@ -15,8 +15,16 @@ namespace FlightDocsSystem.Models.ManagementModels
         [Required]
         public string? DocTitle { get; set; }
 
+        [Column("flight")]
+        [Required]
+        public string? FlightNo { get; set; }
+
+        [Column("doc_type")]
+        [Required]
+        public string? DocType { get; set; }
+
         [Column("doc_type_id")]
-        public string? DocumentVer { get; set; }
+        public float? DocumentVer { get; set; }
 
         [Column("file_name")]
         public string? FileName { get; set; }
@@ -24,10 +32,7 @@ namespace FlightDocsSystem.Models.ManagementModels
         [Column("create_by")]
         public string? Creator { get; set; }
 
-        [Column("create_date")]
-        public DateTime CreateDate { get; set; }
-
-        [Column("note")]
-        public string? Note { get; set; }
+        [Column("update_date")]
+        public DateTime UpdateDate { get; set; } = DateTime.Now;
     }
 }

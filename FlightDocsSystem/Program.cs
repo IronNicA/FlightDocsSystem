@@ -1,4 +1,6 @@
+using FlightDocsSystem.AuthorizationAttribute;
 using FlightDocsSystem.Data;
+using FlightDocsSystem.Service;
 using FlightDocsSystem.Service.ImplementClass;
 using FlightDocsSystem.Service.InterfaceClass;
 using FlightDocsSystem.Service.ServiceClass;
@@ -35,11 +37,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<IUserService,UserService>();
-builder.Services.AddScoped<IRoleService,RoleService>();
-builder.Services.AddScoped<IFlightService, FlightService>();
-
 
 // Add logging
 builder.Services.AddLogging(config =>
@@ -47,6 +44,19 @@ builder.Services.AddLogging(config =>
     config.AddConsole();
     config.AddDebug();
 });
+
+//Add Service classes
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IFlightService, FlightService>();
+builder.Services.AddScoped<IPermissionService, PermissionService>();
+builder.Services.AddScoped<IRoleManageService, RoleManageService>();
+builder.Services.AddScoped<IDocManageService, DocManageService>();
+builder.Services.AddScoped<IGroupRoleManageService, GroupRoleManageService>();
+builder.Services.AddScoped<ISessionManagementService, SessionManagementService>();
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+
 
 builder.Services.AddControllers();
 

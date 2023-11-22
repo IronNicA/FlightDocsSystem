@@ -2,8 +2,6 @@
 {
     public interface IRoleService
     {
-        int? GetPermissionInt();
         string? GetRoleNameFromClaims();
-        bool CanUserUseMethod(string httpMethod);
     }
 }
