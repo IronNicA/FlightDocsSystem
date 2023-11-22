@@ -7,12 +7,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FlightDocsSystem.Data;
 using FlightDocsSystem.Models.ManagementModels;
-using FlightDocsSystem.Models.DataTransferObjectModels;
-using Microsoft.Extensions.Logging; 
+using Microsoft.Extensions.Logging;
 using FlightDocsSystem.Models;
 using Microsoft.AspNetCore.Authorization;
 using FlightDocsSystem.Service.InterfaceClass;
 using FlightDocsSystem.AuthorizationAttribute;
+using FlightDocsSystem.Models.DataTransferObjectModels.Role;
 
 namespace FlightDocsSystem.Controllers
 {

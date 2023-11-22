@@ -1,6 +1,4 @@
-﻿
-
-namespace FlightDocsSystem.Models.DataTransferObjectModels
+﻿namespace FlightDocsSystem.Models.DataTransferObjectModels.Role
 {
     public class RoleDTO
     {

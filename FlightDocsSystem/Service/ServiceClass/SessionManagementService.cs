@@ -1,5 +1,6 @@
 ﻿using FlightDocsSystem.Data; 
 using FlightDocsSystem.Models;
+using FlightDocsSystem.Models.DataTransferObjectModels.Role;
 using FlightDocsSystem.Models.ManagementModels;
 using FlightDocsSystem.Service.InterfaceClass;
 using Microsoft.EntityFrameworkCore;
@@ -14,13 +15,15 @@ namespace FlightDocsSystem.Service.ServiceClass
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<SessionManagementService> _logger;
+        private readonly IUserService _userService;
         private readonly TimeSpan _sessionTimeout = TimeSpan.FromMinutes(30); 
 
-        public SessionManagementService(ApplicationDbContext context, ILogger<SessionManagementService> logger)
+        public SessionManagementService(ApplicationDbContext context, ILogger<SessionManagementService> logger, IUserService userService)
         {
             _context = context;
             StartSessionCleanupTimer();
             _logger = logger;
+            _userService = userService;
         }
 
 
@@ -207,6 +210,41 @@ namespace FlightDocsSystem.Service.ServiceClass
             }
             user.Role = "Terminated";
             _context.SaveChanges();
+        }
+
+        public async Task<bool> TransferUserRoleAndTerminateAccount(RoleTransferDTO transferDTO)
+        {
+            try
+            {
+                var adminUser = await _context.Users.FirstOrDefaultAsync(u => u.UserName == _userService.GetCreator());
+
+                if (adminUser == null || adminUser.Role != "Admin")
+                {
+                    return false;
+                }
+
+                var userToTransfer = await _context.Users.FirstOrDefaultAsync(u => u.UserName == transferDTO.UserNameToTransfer);
+
+                if (userToTransfer == null)
+                {
+                    return false;
+                }
+
+                // Transfer the role
+                userToTransfer.Role = "Admin";
+
+                // Terminate the user account
+                TerminateUserAccount(adminUser.UserName);
+
+                await _context.SaveChangesAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while transferring user role and terminating account");
+                throw;
+            }
         }
     }
 }

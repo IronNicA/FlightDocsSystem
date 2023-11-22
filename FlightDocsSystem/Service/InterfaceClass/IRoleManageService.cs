@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using FlightDocsSystem.Models.DataTransferObjectModels;
+using FlightDocsSystem.Models.DataTransferObjectModels.Role;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FlightDocsSystem.Service.InterfaceClass

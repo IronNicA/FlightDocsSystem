@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FlightDocsSystem.Data;
-using FlightDocsSystem.Models.DataTransferObjectModels;
+using FlightDocsSystem.Models.DataTransferObjectModels.Role;
 using FlightDocsSystem.Models.ManagementModels;
 using FlightDocsSystem.Service.InterfaceClass;
 using Microsoft.AspNetCore.Http;

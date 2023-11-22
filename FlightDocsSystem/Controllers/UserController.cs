@@ -1,7 +1,10 @@
 ﻿using FlightDocsSystem.AuthorizationAttribute;
 using FlightDocsSystem.Models;
+using FlightDocsSystem.Models.DataTransferObjectModels.AppSet;
+using FlightDocsSystem.Models.DataTransferObjectModels.Role;
 using FlightDocsSystem.Models.DataTransferObjectModels.User;
 using FlightDocsSystem.Service.InterfaceClass;
+using FlightDocsSystem.Service.ServiceClass;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -18,12 +21,14 @@ namespace FlightDocsSystem.Controllers
     {
         private readonly IUserService _userService;
         private readonly ISessionManagementService _sessionService;
+        private readonly IAppSetService _appSetService;
 
 
-        public UserController(IUserService userService, ISessionManagementService sessionService)
+        public UserController(IUserService userService, ISessionManagementService sessionService, IAppSetService appSetService)
         {
             _userService = userService;
             _sessionService = sessionService;
+            _appSetService = appSetService;
         }
 
         [HttpGet("Profile")]
@@ -86,7 +91,7 @@ namespace FlightDocsSystem.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new Emessage { StatusCode = StatusCodes.Status500InternalServerError, Message = ex.Message });
             }
         }
- 
+
 
         [HttpDelete("Terminate/{userName}")]
         [Authorize(Roles = "Admin")]
@@ -103,6 +108,7 @@ namespace FlightDocsSystem.Controllers
             }
         }
 
+
         [HttpPost("Reactivate")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ReactivateUser([FromBody] ReactivateDTO reactivateDTO)
@@ -116,6 +122,30 @@ namespace FlightDocsSystem.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new Emessage { StatusCode = StatusCodes.Status500InternalServerError, Message = ex.Message });
             }
         }
+
+        [HttpPost("TransferAdminPermission")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> TransferAdminPermission([FromBody] RoleTransferDTO transferDTO)
+        {
+            try
+            {
+                var success = await _sessionService.TransferUserRoleAndTerminateAccount(transferDTO);
+
+                if (success)
+                {
+                    return Ok("Role transfer and account termination successful");
+                }
+                else
+                {
+                    return BadRequest(new Emessage { StatusCode = 400, Message = "Failed to transfer role or terminate account. Check the provided details." });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new Emessage { StatusCode = 500, Message = ex.Message });
+            }
+        }
+
     }
 }
     

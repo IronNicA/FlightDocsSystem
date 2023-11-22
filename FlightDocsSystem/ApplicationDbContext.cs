@@ -21,6 +21,7 @@ namespace FlightDocsSystem.Data
         public DbSet<DocType> DocTypes { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<SessionInfo> Sessions { get; set; }
+        public DbSet<AppSet> AppSets { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

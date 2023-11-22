@@ -56,8 +56,9 @@ builder.Services.AddScoped<IDocManageService, DocManageService>();
 builder.Services.AddScoped<IGroupRoleManageService, GroupRoleManageService>();
 builder.Services.AddScoped<ISessionManagementService, SessionManagementService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<IAppSetService, AppSetService>();
 
-
+//Add Controller service
 builder.Services.AddControllers();
 
 // Add OpenAPI documentation

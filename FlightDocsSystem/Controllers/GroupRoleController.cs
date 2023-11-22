@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace FlightDocsSystem.Controllers
 {
     [Route("api/[controller]")]
-    [Authorize]
+    [Authorize(Roles = "Admin,Employee")]
     [ApiController]
     [JwtAuthorization]
 

@@ -1,4 +1,5 @@
 ﻿using FlightDocsSystem.Models;
+using FlightDocsSystem.Models.DataTransferObjectModels.Role;
 
 namespace FlightDocsSystem.Service.InterfaceClass
 {
@@ -11,5 +12,6 @@ namespace FlightDocsSystem.Service.InterfaceClass
         bool IsSessionActive(string userName, string token);
         bool IsJwtTokenActive(string token);
         void TerminateUserAccount(string userName);
+        Task<bool> TransferUserRoleAndTerminateAccount(RoleTransferDTO transferDTO);
     }
 }

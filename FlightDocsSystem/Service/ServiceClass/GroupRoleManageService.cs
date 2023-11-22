@@ -16,14 +16,13 @@ namespace FlightDocsSystem.Service.ImplementClass
         private readonly ApplicationDbContext _context;
         private readonly ILogger<GroupRoleManageService> _logger;
         private readonly IUserService _userService;
-        private readonly IRoleService _roleService;
+       
 
-        public GroupRoleManageService(ApplicationDbContext context, ILogger<GroupRoleManageService> logger, IUserService userService, IRoleService roleService)
+        public GroupRoleManageService(ApplicationDbContext context, ILogger<GroupRoleManageService> logger, IUserService userService)
         {
             _context = context;
             _logger = logger;
             _userService = userService;
-            _roleService = roleService;
         }
         public async Task<IActionResult> GetAllDocTypes()
         {
@@ -372,7 +371,6 @@ namespace FlightDocsSystem.Service.ImplementClass
             }
 
             return true;
-        }
-
+        }   
     }
 }

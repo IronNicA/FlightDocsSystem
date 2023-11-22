@@ -123,7 +123,7 @@ namespace FlightDocsSystem.Service.ServiceClass
                     byte[] fileBytes = System.IO.File.ReadAllBytes(filePath);
 
                     // Determine the content type based on the file extension
-                    string contentType = "application/octet-stream"; // Default content type
+                    string contentType = "application/octet-stream";
                     if (Path.GetExtension(docDTO.FileName) == ".docx")
                     {
                         contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
