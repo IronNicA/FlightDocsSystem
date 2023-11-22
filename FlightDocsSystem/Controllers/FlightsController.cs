@@ -60,6 +60,7 @@ namespace FlightDocsSystem.Controllers
         }
 
         [HttpPut("Update/{id}"), Authorize]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> PutFlight(int id, FlightDTO flightDTO)
         {
             try
@@ -74,6 +75,7 @@ namespace FlightDocsSystem.Controllers
         }
 
         [HttpPost("AddFlight"), Authorize]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<ActionResult<PostFlightDTO>> PostFlight(PostFlightDTO flightDTO)
         {
             try
@@ -88,6 +90,7 @@ namespace FlightDocsSystem.Controllers
         }
 
         [HttpDelete("Delete/{id}"), Authorize]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> DeleteFlight(int id)
         {
             try
